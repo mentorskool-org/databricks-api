@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attractive Form</title>
+    <link href="{{ url_for('static', path='css/index.css') }}" rel="stylesheet" />
+    <link rel="icon" href="favicon.ico" />
+</head>
+
+<body>
+    <div id="hello-message">
+        <h1 id="apiMessage">🙋‍♂️ Welcome to Enqurious! Fill the following details to get the table data</h1>
+    </div>
+
+    <div id="form-container">
+        <h2>Fetch Unity Catalog Data</h2>
+        <form>
+            <label for="Catalog Name">Catalog Name:</label>
+            <input type="text" id="catalogName" name="catalog" required>
+
+            <label for="Database Name">Database Name:</label>
+            <input type="text" id="databaseName" name="database" required>
+
+            <label for="Table Name">Table Name:</label>
+            <input type="text" id="tableName" name="table" required>
+
+            <button type="button" onclick="submitForm()">Submit</button>
+        </form>
+    </div>
+
+    <!-- <button onclick="downloadExcel()">Download Excel</button> -->
+
+    <script src="{{ url_for('static', path='js/index.js') }}"></script>
+
+</body>
+
+</html>
