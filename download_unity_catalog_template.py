@@ -47,23 +47,27 @@ def main():
             versions = st.selectbox("Select the version:", table_versions, placeholder="Choose an option")
 
         
-        # st.write(f"You selected the table: {table_name}")
-        # if st.button("Fetch Data"):
-        #     # Call fetch_catalog_data main function to fetch data
-        #     data = fc.main(catalog_name, schema_name, table_name, versions)
-            
-        #     # Display a subset of the data
-        #     st.subheader("Table Data:")
-        #     st.write(data["table_data"])
+        st.write(f"You selected the table: {table_name}")
+        if st.button("Fetch Data"):
+            # Display spinner while the process is ongoing
+            with st.spinner("Processing..."):
+                # Call fetch_catalog_data main function to fetch data
+                data = fc.main(catalog_name, schema_name, table_name, versions)
+                
+            # Display a subset of the data
+            st.subheader("Table Data:")
+            st.write(data["table_data"])
 
-    #         st.subheader("Table Metadata:")
-    #         st.write(data["table_metadata"])
+            st.subheader("Table Metadata:")
+            st.write(data["table_metadata"])
     elif selected_option == "Volumes":
         # Display the selected option
         st.write(f"You selected: {selected_option}")
 
         # Get user input for the Delta table name
-        volume_name = st.text_input("Enter Volume Name:", "test") # default, we can use any other also
+        # volume_name = st.text_input("Enter Volume Name:", "test") # default, we can use any other also
+        volumes = fc.fetch_volumes(schema_name, catalog_name)
+        volume_name = st.selectbox("Enter Volume Name:", volumes, placeholder="Choose an option")
         print(volume_name)
 
         try:
@@ -92,48 +96,12 @@ def main():
     #     print(bucket_name)
     #     print(object_key)
 
-        # Download the file from S3
+        # Download the file from ADLS
         if st.button("Fetch Data"):
             # download_file_from_s3(bucket_name, object_key, local_path)
             download_file_from_s3(storage_location, file, local_path)
 
-            st.write(f"The file successfully downloaded at: **{local_path}**")
-
-
-# ___________________________________________________________________________________    
-    # catalog_name = st.text_input("Enter the catalog name:")
-    # database_name = st.text_input("Enter the database name:")
-    # table_name = st.text_input("Enter the table name:")
-
-    # if st.button("Fetch Data"):
-    #     # Call your main function to fetch data
-    #     data = fc.main(catalog_name, database_name, table_name)
-        
-    #     # Display a subset of the data
-    #     st.subheader("Table Data:")
-    #     st.write(data["table_data"])
-
-    #     st.subheader("Table Metadata:")
-    #     st.write(data["table_metadata"])
-
-
-# def fetch_data(catalog_name, database_name, table_name):
-#     # Replace 'main' with your actual main function
-#     # return main(catalog_name, database_name, table_name)
-#     # Creating a DataFrame with 500 records
-#     data = {
-#         'ID': range(1, 500001),
-#         'Name': [f'Person_{i}' for i in range(1, 500001)],
-#         'Age': np.random.randint(18, 60, size=500000),
-#         'Salary': np.random.uniform(30000, 80000, size=500000)
-#     }
-
-#     df = pd.DataFrame(data)
-
-#     # Display the DataFrame
-#     return {
-#         "table_data": df
-#     }
+            st.success(f"The file successfully downloaded at: **{local_path}**")
 
 
 if __name__ == "__main__":

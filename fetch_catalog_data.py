@@ -74,6 +74,61 @@ def fetch_tables(schema_name, catalog_name: str) -> list:
     return tables
 
 
+def fetch_volumes(schema_name: str, catalog_name: str) -> list:
+    while True:
+        cluster_state = get_cluster_state(CLUSTER_ID)
+        print(f"The cluster state is: {cluster_state}")
+        if cluster_state == "RUNNING":
+            break
+
+        # TODO: For now, we are manually creating the cluster, but discuss that shall we create cluster via code, if it not doesn't  exists
+        # Start the cluster
+        start_cluster(CLUSTER_ID)
+        time.sleep(
+            60
+        )  # wait for 60 seconds and check whether cluster is started or not
+
+    # Create the context
+    context_id = create_execution_context(CLUSTER_ID, "sql")
+
+    # Execute the following command
+    command = f"""
+    SHOW VOLUMES FROM {catalog_name}.{schema_name};
+"""
+    command_id = execute_command(CLUSTER_ID, context_id, command, "sql")
+
+    while True:
+        # Once the command is executed, fetch the result
+        response = get_command_execution_output(CLUSTER_ID, context_id, command_id)
+        print(response)
+
+        if response.get("results") is None:
+            continue
+
+        if response.get('results') is not None:
+            # return response
+            break
+
+        # Check if data is available in the response
+        if response['results']["resultType"] == "error":
+            raise Exception(f"Error: {response['results']['summary']}")
+        
+ 
+        # results = response['results']
+        # if results.get("data") is not None:
+        #     versions = []
+        #     for version in results['data']:
+        #         versions.append(version[0])
+                
+        #     return versions
+    data = response['results']['data']
+    volumes = []
+    for volume_data in data:
+        volumes.append(volume_data[1])
+    
+    return volumes
+
+
 def fetch_volume_storage(catalog_name, schema_name, volume_name):
     # get the command info
     response = requests.get(
@@ -86,6 +141,24 @@ def fetch_volume_storage(catalog_name, schema_name, volume_name):
 
     return storage_location
 
+
+def create_volume(catalog_name: str, schema_name: str, volume_name: str) -> dict:
+    data = {
+        "catalog_name": catalog_name,
+        "schema_name": schema_name,
+        "name": volume_name,
+        "volume_type": "MANAGED"
+    }
+    response = requests.post(
+        f"{DATABRICKS_HOST}/api/2.1/unity-catalog/volumes",
+        headers=HEADERS,
+        data=json.dumps(data),
+    )
+
+    if response.status_code != 200:
+        raise Exception("The volume is unable to create")
+    
+    return response.json()
 
 
 def table_version(schema_name: str, table_name: str, catalog_name: str = "content_datasets") -> list:
@@ -129,10 +202,9 @@ def table_version(schema_name: str, table_name: str, catalog_name: str = "conten
 
         if response.get("results") is None:
             continue
-
-        # Check if data is available in the response
+        
         if response['results']["resultType"] == "error":
-            raise Exception(f"Error: {results['error']}")
+            raise Exception(f"Error: {response['results']['summary']}") # {'results': {'resultType': 'error', 'summary': '<error_def>'}}
         
         
         results = response['results']
@@ -367,6 +439,3 @@ if __name__ == "__main__":
     volume_name = "test"
     storage_location = fetch_volume_storage(catalog_name, schema_name, volume_name)
     print(storage_location)
-
-
-
