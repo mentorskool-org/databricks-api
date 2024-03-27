@@ -1,0 +1,3 @@
+In case of big data, dask library can help us that reads the data in different partitions.
+
+Transactions 7 Gb of data is read in 113 partitions.

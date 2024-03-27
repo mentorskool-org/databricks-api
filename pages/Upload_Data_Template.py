@@ -6,7 +6,16 @@ import time
 
 ## Only give the file upload access to the users. Don't allow them to create a catalog, database, or volume
 def main():
-    st.title("Databricks Table Uploader")
+    # st.title("Databricks Table Uploader")
+
+    st.write(
+    """
+         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"> 
+
+         # Databricks Table Uploader! <i class="fa-solid fa-upload"></i>
+         """,
+    unsafe_allow_html=True,
+)
 
     # No need of fetching catalogs from API, all the data is going to store in this single catalog
     # catalogs_list = ['content_datasets'] #, 'main', 'system'] #TODO: fetch the catalogs list from api

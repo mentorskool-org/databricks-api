@@ -8,7 +8,16 @@ import os
 
 def main():
 
-    st.title("Databricks Table Fetcher")
+    # st.title("Databricks Table Fetcher")
+
+    st.write(
+    """
+         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"> 
+
+         # Databricks Table Fetcher! <i class="fa-solid fa-download"></i>
+         """,
+    unsafe_allow_html=True,
+)
 
     # No need of fetching catalogs from API, all the data is going to store in this single catalog
     # catalogs_list = ['content_datasets'] #, 'main', 'system'] #TODO: fetch the catalogs list from api

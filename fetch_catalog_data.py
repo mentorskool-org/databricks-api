@@ -7,7 +7,8 @@ from constant import TOKEN, DATABRICKS_HOST
 
 
 HEADERS = {"Authorization": f"Bearer {TOKEN}"}
-CLUSTER_ID = "0201-093503-pg3rgvwi"
+# CLUSTER_ID = "0201-093503-pg3rgvwi"
+CLUSTER_ID = "0319-085803-wkbtdodi"
 
 
 # Fetch all catalogs
@@ -24,8 +25,8 @@ def fetch_catalogs():
     return catalogs
 
 
-# Fetch metadata of the table
-def get_table_metadata(
+# Fetch metadata of the table -- the given function fetch the metadata of the latest version of table
+def get_latest_version_table_metadata(
     catalog_name: str, database_name: str, table_name: str
 ) -> pd.DataFrame:
     response = requests.get(
@@ -41,6 +42,96 @@ def get_table_metadata(
         metadata.append(json.loads(item["type_json"]))
 
     metadata_df = pd.json_normalize(metadata)
+
+    return metadata_df
+
+
+def get_table_metadata(
+    catalog_name: str, database_name: str, table_name: str, rollback_version: int, latest_version: int
+) -> pd.DataFrame:
+    
+    while True:
+        cluster_state = get_cluster_state(CLUSTER_ID)
+        print(f"The cluster state is: {cluster_state}")
+        if cluster_state == "RUNNING":
+            break
+
+        # TODO: For now, we are manually creating the cluster, but discuss that shall we create cluster via code, if it not doesn't  exists
+        # Start the cluster
+        start_cluster(CLUSTER_ID)
+        time.sleep(
+            60
+        )  # wait for 60 seconds and check whether cluster is started or not
+
+    context_id = create_execution_context(CLUSTER_ID, "python")
+
+    # there is no need for rollback
+    rollback_done = False
+    if rollback_version==latest_version:
+        print("No need for rollback")
+        command = f"""
+        display(spark.sql("DESCRIBE FORMATTED {catalog_name}.{database_name}.{table_name};"))
+    """
+    else:
+        print("Rollback tooks place")
+        command = f"""
+            spark.sql("RESTORE TABLE {catalog_name}.{database_name}.{table_name} TO VERSION AS OF {rollback_version};") # roll_back to the given version
+            
+            display(spark.sql("DESCRIBE FORMATTED {catalog_name}.{database_name}.{table_name};"))
+        """
+        rollback_done = True
+
+    # execute command
+    command_id = execute_command(CLUSTER_ID, context_id, command, "python")
+
+    # fetch result and wait until the status == finished, then move ahead
+    while True:
+        response_json = get_command_execution_output(CLUSTER_ID, context_id, command_id)
+        if response_json.get("status"):
+            if response_json["status"]=="Finished":
+                print(response_json)
+                break
+    
+    # Fetch the data from this response
+    data = response_json["results"]["data"]
+
+    # Once we get the data restore back to current version
+    context_id = create_execution_context(CLUSTER_ID, "python")
+
+    # Restore to latest version if rollback is done
+    if rollback_done:
+        print("Successfully rollback to latest version!")
+        command = f"""
+            spark.sql("RESTORE TABLE {catalog_name}.{database_name}.{table_name} TO VERSION AS OF {latest_version};") # roll_back to the given version
+        """
+
+        # execute command
+        command_id = execute_command(CLUSTER_ID, context_id, command, "python")
+
+        # fetch result and wait until the status == finished, then move ahead
+        while True:
+            response_json = get_command_execution_output(CLUSTER_ID, context_id, command_id)
+            if response_json.get("status"):
+                if response_json["status"]=="Finished":
+                    print(response_json)
+                    break
+    
+    # There is an empty list between table metadata and table properties. Use that empty list and fetch only the metadata
+    metadata_dict = {
+        "columns": [],
+        "dtypes": [],
+        "comments": []
+    }
+    for record in data:
+        # Now identify that if all the index in a record is empty means, table metadata is over, so break the loop
+        if record[0]=="" and record[1]=="" and record[2]=="":
+            break
+        
+        metadata_dict["columns"].append(record[0]) # Column Name
+        metadata_dict["dtypes"].append(record[1]) # Column Data type
+        metadata_dict["comments"].append(record[2]) # Column Comment
+
+    metadata_df = pd.DataFrame(metadata_dict)
 
     return metadata_df
 
@@ -161,18 +252,7 @@ def create_volume(catalog_name: str, schema_name: str, volume_name: str) -> dict
     return response.json()
 
 
-def table_version(schema_name: str, table_name: str, catalog_name: str = "content_datasets") -> list:
-    # # get the command info
-    # response = requests.get(
-    #     f"{DATABRICKS_HOST}/api/2.1/unity-catalog/tables/{catalog_name}.{schema_name}.{table_name}",
-    #     headers=HEADERS,
-    # )
-
-    # generation_value = response.json()["generation"]+1
-
-    # generations = list(range(generation_value))
-
-    # return generations
+def table_history(schema_name: str, table_name: str, catalog_name: str = "content_datasets") -> dict[str:str]:
     while True:
         cluster_state = get_cluster_state(CLUSTER_ID)
         print(f"The cluster state is: {cluster_state}")
@@ -191,30 +271,46 @@ def table_version(schema_name: str, table_name: str, catalog_name: str = "conten
 
     # Execute the following command
     command = f"""
-    DESC HISTORY {catalog_name}.{schema_name}.{table_name};
+    DESCRIBE HISTORY {catalog_name}.{schema_name}.{table_name};
 """
     command_id = execute_command(CLUSTER_ID, context_id, command, "sql")
 
     while True:
         # Once the command is executed, fetch the result
         response = get_command_execution_output(CLUSTER_ID, context_id, command_id)
-        print(response)
 
-        if response.get("results") is None:
+        if response.get("status"):
+            if response["status"]=="Finished":
+                data = response["results"]["data"]
+                break
+        
+        if response.get("results"):
+            if response['results']["resultType"] == "error":
+                raise Exception(f"Error: {response['results']['summary']}") # {'results': {'resultType': 'error', 'summary': '<error_def>'}}
+        
+
+    # Fetch the versions and description
+    operation_index = 4
+    operation_parameters_index = 5
+    user_metadata_index = 13
+    versions = []
+    description = []
+    for record in data:
+        if record[operation_index] == "RESTORE":
             continue
-        
-        if response['results']["resultType"] == "error":
-            raise Exception(f"Error: {response['results']['summary']}") # {'results': {'resultType': 'error', 'summary': '<error_def>'}}
-        
-        
-        results = response['results']
-        if results.get("data") is not None:
-            versions = []
-            for version in results['data']:
-                versions.append(version[0])
-                
-            return versions
-            
+
+        versions.append(record[0])
+        if record[operation_index] == "CHANGE COLUMN":
+            # So we have to reframe the description
+            operational_paremeter_data = json.loads(record[operation_parameters_index]["column"])
+            description.append(f"The comment **{operational_paremeter_data['metadata']['comment']}** is added to the column **{operational_paremeter_data['name']}**")
+
+        if record[operation_index] == "CREATE OR REPLACE TABLE AS SELECT":
+            description.append(record[user_metadata_index])
+    
+    version_description_map = dict(zip(versions, description))
+    return version_description_map
+    
     
 def get_cluster_state(cluster_id: str) -> str | int:
     response = requests.get(
@@ -403,11 +499,13 @@ def main(
     print(data_df)
     print(f"The length of dataframe is: {len(data_df)}")
 
-    # Once data is fetched, then fetch the metadata
-    return {
-        "table_data": data_df,
-        "table_metadata": get_table_metadata(catalog_name, database_name, table_name),
-    }
+    return data_df
+
+    # # Once data is fetched, then fetch the metadata
+    # return {
+    #     "table_data": data_df,
+    #     "table_metadata": get_table_metadata(catalog_name, database_name, table_name),
+    # }
 
 
 if __name__ == "__main__":
@@ -427,15 +525,30 @@ if __name__ == "__main__":
     # catalogs = fetch_catalogs()
     # print(catalogs)
 
-    catalog_name = "auto_insurance"
+    # catalog_name = "auto_insurance"
     # schemas = fetch_schemas(catalog_name)
     # print(schemas)
 
-    catalog_name = "auto_insurance"
-    schema_name = "default"
+    # catalog_name = "auto_insurance"
+    # schema_name = "default"
     # tables = fetch_tables(schema_name, catalog_name)
     # print(tables)
 
-    volume_name = "test"
-    storage_location = fetch_volume_storage(catalog_name, schema_name, volume_name)
-    print(storage_location)
+    # volume_name = "test"
+    # storage_location = fetch_volume_storage(catalog_name, schema_name, volume_name)
+    # print(storage_location)
+
+    # Check the table_history function
+    # catalog_name = "auto_insurance"
+    # schema_name = "default"
+    # table_name = "customers"
+    # table_data = table_history(schema_name, table_name, catalog_name)
+    # print(table_data)
+
+
+    # Fetch the metadata of the version 1 of ecommerce.default.customers
+    catalog_name = "ecommerce"
+    schema_name = "default"
+    table_name = "customers"
+    metadata_df = get_table_metadata(catalog_name, schema_name, table_name, "21", "21")
+    print(metadata_df)
