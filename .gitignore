@@ -3,3 +3,6 @@
 __pycache__/
 venv/
 tmp/
+s3_methods.py
+templates.zip
+Exceptions.txt

@@ -1,8 +1,14 @@
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv(r"C:\Users\burha\Mentorskool\Enqurious\Databricks Delta sharing\databricks-api\.env")
 
 
-AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+# AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+# AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+
+DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
+TOKEN = os.environ.get("DATABRICKS_TOKEN")
+
+# Initialize the connection string (you can find this in your Azure portal)
+AZURE_CONNECTION_STRING = os.environ.get("AZURE_CONNECTION_STRING")
