@@ -1,7 +1,6 @@
 import fetch_catalog_data as fc
 import streamlit as st
 from upload_catalog_data import upload_file_to_volume, upload_file_to_table
-import time
 
 
 ## Only give the file upload access to the users. Don't allow them to create a catalog, database, or volume

@@ -1,6 +1,4 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 import fetch_catalog_data as fc
 from azure_data_storage import fetch_files, download_file_from_s3
 # from s3_methods import get_s3_data, fetch_files, download_file_from_s3

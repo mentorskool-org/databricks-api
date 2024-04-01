@@ -29,3 +29,23 @@ st.markdown(
       The capability to include tags is currently under development and will be integrated soon
       """
 )
+
+if __name__ == "__main__":
+    import subprocess
+    import sys
+    import psutil
+
+    def is_streamlit_running():
+        for proc in psutil.process_iter(attrs=['pid', 'name']):
+            if 'streamlit' in proc.info['name']:
+                return True
+        return False
+    
+    if is_streamlit_running():
+        print("Streamlit server is already running.")
+    else:
+        try:
+            subprocess.run(["streamlit", "run", "Unity_Catalog_Guide.py"], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error: {e}")
+            sys.exit(1)
