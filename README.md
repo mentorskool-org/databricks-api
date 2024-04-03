@@ -85,3 +85,20 @@ Fetch Metadata:
 
 Volumes:
 ![Unity Catalog Download Volumes Data](images/download_template_volumes_one.png)
+
+
+## Features
+
+- Centralized storage of data on Databricks.
+- Ability to fetch data and metadata efficiently.
+- Streamlined access to datasets, reducing dependencies and delays.
+
+## Requirements
+
+- Python 3.x
+- Dependencies listed in requirements.txt
+- Access credentials for Databricks API
+
+## Troubleshooting
+
+- If the server fails to start, ensure that all dependencies are installed correctly and that access credentials are properly configured.
