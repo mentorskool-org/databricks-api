@@ -296,16 +296,17 @@ def table_history(schema_name: str, table_name: str, catalog_name: str = "conten
     versions = []
     description = []
     for record in data:
-        if record[operation_index] == "RESTORE":
-            continue
+        # if record[operation_index] == "RESTORE" or record[operation_index] == "CHANGE COLUMN":
+        #     continue
 
-        versions.append(record[0])
-        if record[operation_index] == "CHANGE COLUMN":
-            # So we have to reframe the description
-            operational_paremeter_data = json.loads(record[operation_parameters_index]["column"])
-            description.append(f"The comment **{operational_paremeter_data['metadata']['comment']}** is added to the column **{operational_paremeter_data['name']}**")
-
+        # versions.append(record[0])
+        # if record[operation_index] == "CHANGE COLUMN":
+        #     # So we have to reframe the description
+        #     operational_paremeter_data = json.loads(record[operation_parameters_index]["column"])
+        #     description.append(f"The comment **{operational_paremeter_data['metadata']['comment']}** is added to the column **{operational_paremeter_data['name']}**")
+        
         if record[operation_index] == "CREATE OR REPLACE TABLE AS SELECT":
+            versions.append(record[0])
             description.append(record[user_metadata_index])
     
     version_description_map = dict(zip(versions, description))
@@ -547,8 +548,11 @@ if __name__ == "__main__":
 
 
     # Fetch the metadata of the version 1 of ecommerce.default.customers
-    catalog_name = "ecommerce"
-    schema_name = "default"
-    table_name = "customers"
-    metadata_df = get_table_metadata(catalog_name, schema_name, table_name, "21", "21")
-    print(metadata_df)
+    # catalog_name = "ecommerce"
+    # schema_name = "default"
+    # table_name = "customers"
+
+    # metadata_df = get_table_metadata(catalog_name, schema_name, table_name, "21", "21")
+    # print(metadata_df)
+
+    table_history(schema_name='default', table_name='customers', catalog_name='auto_insurance')
