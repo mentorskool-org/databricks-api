@@ -1,2 +1,2 @@
 # databricks-api
-API to perforom databricks operations via API
+API to perform databricks operations via API
