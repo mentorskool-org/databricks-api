@@ -309,6 +309,20 @@ def table_history(schema_name: str, table_name: str, catalog_name: str = "conten
             versions.append(record[0])
             description.append(record[user_metadata_index])
     
+    # Serialize the version properly for user's understandability. 
+    # Current actual version number are displayed ex: [15, 2, 1, 0],
+    # this will confuse users that after 2, direct 15 version came where 
+    # are other versions, but in actual we want that other operations are of 
+    # comments orany other operations. The actual versions showed to user should be
+    # versions = [3, 2, 1, 0]
+    versions.sort()
+    for i in range(len(versions)):
+        versions[i] = i
+
+    # reverse the versions list, to sort it from highest to lowest, here 15 will be 
+    # replaced by 3 based on the above example
+    versions = versions[::-1]
+    
     version_description_map = dict(zip(versions, description))
     return version_description_map
     
