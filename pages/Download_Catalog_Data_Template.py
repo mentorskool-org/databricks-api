@@ -32,6 +32,10 @@ def main():
     # Fetch all the tables of that particular catalog via API
     schemas = fc.fetch_schemas(catalog_name)
 
+    # Ignore the default and information_schema
+    schemas.remove("default")
+    schemas.remove("information_schema")
+
     # Create a dropdown list using st.selectbox
     schema_name = st.selectbox(
         "Select a database:", schemas, placeholder="Choose an option"
