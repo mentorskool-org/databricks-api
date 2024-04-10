@@ -322,6 +322,7 @@ def table_history(
         if (
             record[operation_index] == "CREATE OR REPLACE TABLE AS SELECT"
             or record[operation_index] == "CREATE TABLE AS SELECT"
+            or record[operation_index] == "REPLACE TABLE AS SELECT"
         ):
             cort_versions.append(record[0])
             all_versions.append(record[0])
