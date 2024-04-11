@@ -15,3 +15,5 @@ DATABRICKS_HTTP_PATH = os.environ.get("DATABRICKS_HTTP_PATH")
 
 # Initialize the connection string (you can find this in your Azure portal)
 AZURE_CONNECTION_STRING = os.environ.get("AZURE_CONNECTION_STRING")
+
+CLUSTER_ID = os.environ.get("CLUSTER_ID")
