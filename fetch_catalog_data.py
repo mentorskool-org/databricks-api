@@ -9,13 +9,11 @@ from constant import (
     DATABRICKS_HOST,
     DATABRICKS_SERVER_HOSTNAME,
     DATABRICKS_HTTP_PATH,
+    CLUSTER_ID
 )
 
 
 HEADERS = {"Authorization": f"Bearer {TOKEN}"}
-# CLUSTER_ID = "0201-093503-pg3rgvwi"
-CLUSTER_ID = "0319-085803-wkbtdodi"
-
 
 # Fetch all catalogs
 def fetch_catalogs():
@@ -555,7 +553,12 @@ def select_ccol_version(selected_version, cort_versions, ccol_versions):
     return meta_version
 
 
-def fetch_data_via_databricks_connector(catalog, schema, table, version):
+def fetch_data_via_databricks_connector(catalog, schema, table, version, preview=False):
+    if preview:
+        query = f"SELECT * FROM {catalog}.{schema}.{table}@v{version} LIMIT 20;"
+    else:
+        query = f"SELECT * FROM {catalog}.{schema}.{table}@v{version};"
+
     with sql.connect(
         server_hostname=DATABRICKS_SERVER_HOSTNAME,
         http_path=DATABRICKS_HTTP_PATH,
@@ -563,7 +566,7 @@ def fetch_data_via_databricks_connector(catalog, schema, table, version):
     ) as connection:
 
         with connection.cursor() as cursor:
-            cursor.execute(f"SELECT * FROM {catalog}.{schema}.{table}@v{version};")
+            cursor.execute(query)
             result = cursor.fetchall()
 
             row1 = result[0]
@@ -586,7 +589,9 @@ if __name__ == "__main__":
     # print(data["table_data"])
     # print(data["table_metadata"])
 
-    # versions = table_version(database_name, table_name, catalog_name)
+    # versions = table_history(
+    #     catalog_name='globalmart_ecommerce', schema_name='data_engineering', table_name='customers'
+    # )
     # print(versions)
 
     # catalogs = fetch_catalogs()
@@ -626,11 +631,11 @@ if __name__ == "__main__":
     # )
     # print(metadata_df)
 
-    versions_index, version_description_map, cort_versions, ccol_versions = table_history(
-        schema_name="default", table_name="customers", catalog_name="globalmart_ecommerce"
-    )
-    user_selection = 0
-    selected_version = select_ccol_version(user_selection, cort_versions, ccol_versions)
+    # versions_index, version_description_map, cort_versions, ccol_versions = table_history(
+    #     schema_name="default", table_name="customers", catalog_name="globalmart_ecommerce"
+    # )
+    # user_selection = 0
+    # selected_version = select_ccol_version(user_selection, cort_versions, ccol_versions)
 
     # start_time=time.time()
     # customers_df = fetch_data_via_databricks_connector("banking", "default", "credits", 0)
@@ -638,3 +643,18 @@ if __name__ == "__main__":
 
     # print(customers_df.head())
     # print(f"Time taken to fetch the customers data is {end_time-start_time} seconds!!")
+
+    # metadata = get_latest_version_table_metadata(
+    #     catalog_name="globalmart_ecommerce", database_name="data_analyst", table_name="customers"
+    # )
+    # print(metadata)
+    # print(metadata.columns)
+
+    # if 'metadata.comment' in list(metadata.columns):
+    #     print(True)
+    # else:
+    #     print(False)
+
+    fetch_data_via_databricks_connector(
+        catalog='foodwagon_ecommerce', schema='data_engineering', table='orders', version=0, preview=True
+    )

@@ -85,8 +85,21 @@ def main():
             print(versions_map_description[version])
             st.info(f"Description: {versions_map_description[version]}")
 
+            preview_data, fetch_data = st.columns(2)
+
+            if preview_data.button("Preview Data"):
+                # Display spinner while the process is ongoing
+                with st.spinner("Processing..."):
+                    data = fc.fetch_data_via_databricks_connector(
+                        catalog_name, schema_name, table_name, version, preview=True
+                    )
+
+                # Display a subset of the data
+                st.subheader(f"Preview of the {table_name} Data:")
+                st.write(data)
+
             # st.write(f"You selected the table: {table_name}")
-            if st.button("Fetch Data"):
+            if fetch_data.button("Fetch Data"):
                 # Display spinner while the process is ongoing
                 with st.spinner("Processing..."):
                     # Call fetch_catalog_data main function to fetch data

@@ -1,13 +1,10 @@
 from azure.storage.blob import BlobServiceClient
-from constant import AZURE_CONNECTION_STRING
+from constant import AZURE_CONNECTION_STRING, CLUSTER_ID
 import fetch_catalog_data as fc
 import csv
 
 import time
 from datetime import datetime
-
-
-CLUSTER_ID = "0319-085803-wkbtdodi"
 
 
 def upload_file_to_volume(storage_location: str, local_file_path: str):
@@ -75,7 +72,7 @@ def upload_file_to_table(
         raise FileNotFoundError(
             f"There is no such file: {file_path}. Please Enter the correct file path!"
         )
-    
+
     print(f"{datetime.now()} File reading completed!")
 
     # Check the status of the cluster
@@ -147,7 +144,7 @@ def update_comments(
         time.sleep(
             60
         )  # wait for 60 seconds and check whether cluster is started or not
-    
+
     # Create context
     context_id = fc.create_execution_context(fc.CLUSTER_ID, "python")
 
@@ -177,14 +174,23 @@ if __name__ == "__main__":
     # local_file_path = ""
     # upload_file_to_volume()
 
-    catalog_name = "auto_insurance"
-    database_name = "default"
-    table_name = "customers"
+    # catalog_name = "auto_insurance"
+    # database_name = "default"
+    # table_name = "customers"
 
-    # let's test the update_comment function
-    columns = {
-        "CustomerID": "This is a customer_id column uniquely describing the customers - 3",
-        "State": "this is state - 2",
-        "City": "City - 2",
-    }
-    response = update_comments(catalog_name, database_name, table_name, columns)
+    # # let's test the update_comment function
+    # columns = {
+    #     "CustomerID": "This is a customer_id column uniquely describing the customers - 3",
+    #     "State": "this is state - 2",
+    #     "City": "City - 2",
+    # }
+    # response = update_comments(catalog_name, database_name, table_name, columns)
+
+    catalog_name = 'globalmart_ecommerce'
+    schema_name = 'data_engineering'
+    table_name = 'customer_reviews'
+    file_to_upload_location = r"C:\Users\burha\Mentorskool\Enqurious\Available Data\Globalmart\customer_reviews.csv"
+    description = 'Upload customer_review v1 data to data analyst schema'
+    upload_file_to_table(
+        catalog_name, schema_name, table_name, file_to_upload_location, description
+    )
