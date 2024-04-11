@@ -163,10 +163,10 @@ def main():
                     
                     # Once file is uploaded fetch the version of that file
                     try:
-                        table_versions = fc.table_version(
+                        versions_index, version_description_map, cort_versions, ccol_versions, all_versions = fc.table_history(
                             schema_name, table_name, catalog_name
                         )
-                        latest_version = table_versions[0]
+                        latest_version = versions_index[-1]
                     except Exception as error:
                         print(error)
                         # if "TABLE_OR_VIEW_NOT_FOUND" in str(error):
@@ -178,7 +178,8 @@ def main():
                         # it gets time to reflect in version, thus the previous version is shown
                         # that's why adding 1 in previous version will be latest version
                         st.success(
-                            f"""The data is successfully uploaded to the {catalog_name}.{schema_name}.{table_name}!
+                            f"""The data has been effectively uploaded into the {table_name} table 
+                            within the {schema_name} schema of the {catalog_name} catalog!\n
                             Version {latest_version} of table {table_name} is created."""
                         )
                     else:

@@ -47,13 +47,19 @@ def main():
     print(table_name)
 
     # Example list of columns
-    table_matadata = fc.get_latest_version_table_metadata(catalog_name, schema_name, table_name)
-    print(table_matadata)
+    table_metadata = fc.get_latest_version_table_metadata(catalog_name, schema_name, table_name)
+    print(table_metadata)
 
-    columns_list = list(table_matadata["name"])
+    columns_list = list(table_metadata["name"])
     print(columns_list)
 
-    existing_comment_list = list(table_matadata["metadata.comment"].replace({np.nan: None}))
+    
+    if 'metadata.comment' in list(table_metadata.columns):
+        existing_comment_list = list(table_metadata["metadata.comment"].replace({np.nan: None}))
+        print(existing_comment_list)
+    else:
+        existing_comment_list = [None]*len(table_metadata)
+
     print(existing_comment_list)
 
     column_name = st.selectbox(
@@ -103,20 +109,28 @@ def main():
         st.success("Comment added successfully!")
 
     if remove_button.button("Remove Comment"):
-        st.session_state["alter_comments"].pop(column_name)
+        try:
+            st.session_state["alter_comments"].pop(column_name)
+        except KeyError as error:
+            st.error(f"The comment of the {column_name} column is already removed!")
     
     # Display the session state
     st.write("Comments to change:", st.session_state["alter_comments"])
     print(st.session_state)
 
     if st.button("Update the given comments"):
-        # Call the method to update comments
-        alter_comments_dict = st.session_state["alter_comments"]
-        print(alter_comments_dict)
+        try:
+            with st.spinner("Processing..."):
+                # Call the method to update comments
+                alter_comments_dict = st.session_state["alter_comments"]
+                print(alter_comments_dict)
 
-        # Update the comments
-        up.update_comments(catalog_name, schema_name, table_name, alter_comments_dict)
-        st.success("Comments Updated Successfully!")
+                # Update the comments
+                up.update_comments(catalog_name, schema_name, table_name, alter_comments_dict)
+                st.success("Comments Updated Successfully!")
+        except Exception as error:
+            print(error)
+            st.error(error)
 
 
 if __name__ == "__main__":
