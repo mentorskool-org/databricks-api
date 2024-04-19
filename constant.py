@@ -1,7 +1,7 @@
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 
-load_dotenv(r"C:\Users\burha\Mentorskool\Enqurious\Databricks Delta sharing\databricks-api\.env")
+load_dotenv(find_dotenv())
 
 
 # AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")

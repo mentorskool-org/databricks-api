@@ -121,12 +121,12 @@ def upload_file_to_table(
         )
         if response_json.get("status"):
             if response_json["status"] == "Finished":
+                if response_json.get("results"):
+                    if response_json["results"]["resultType"] == "error":
+                        raise Exception(f"Error: {response_json['results']['summary']}")
+                
                 print(f"{datetime.now()} Data uploaded!")
                 return response_json
-
-        if response_json.get("result"):
-            if response_json["result"]["resultType"] == "error":
-                raise Exception(f"Error: {response_json['results']['summary']}")
 
 
 def update_comments(
@@ -186,11 +186,11 @@ if __name__ == "__main__":
     # }
     # response = update_comments(catalog_name, database_name, table_name, columns)
 
-    catalog_name = 'globalmart_ecommerce'
+    catalog_name = 'cpg'
     schema_name = 'data_engineering'
-    table_name = 'customer_reviews'
-    file_to_upload_location = r"C:\Users\burha\Mentorskool\Enqurious\Available Data\Globalmart\customer_reviews.csv"
-    description = 'Upload customer_review v1 data to data analyst schema'
+    table_name = 'customers'
+    file_to_upload_location = r"C:\Users\burha\Mentorskool\Enqurious\Available Data\Cpg\customers.csv"
+    description = 'completely new data for testing purpose'
     upload_file_to_table(
         catalog_name, schema_name, table_name, file_to_upload_location, description
     )
