@@ -559,23 +559,27 @@ def fetch_data_via_databricks_connector(catalog, schema, table, version, preview
     else:
         query = f"SELECT * FROM {catalog}.{schema}.{table}@v{version};"
 
-    with sql.connect(
-        server_hostname=DATABRICKS_SERVER_HOSTNAME,
-        http_path=DATABRICKS_HTTP_PATH,
-        access_token=TOKEN,
-    ) as connection:
+    try:
+        with sql.connect(
+            server_hostname=DATABRICKS_SERVER_HOSTNAME,
+            http_path=DATABRICKS_HTTP_PATH,
+            access_token=TOKEN,
+        ) as connection:
 
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchall()
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                result = cursor.fetchall()
 
-            row1 = result[0]
+                row1 = result[0]
 
-            # fetch the column names
-            cols = row1.asDict().keys()
+                # fetch the column names
+                cols = row1.asDict().keys()
 
-    df = pd.DataFrame(result, columns=cols)
-    return df
+        df = pd.DataFrame(result, columns=cols)
+        return df
+    except ValueError as error:
+        print(error)
+        return pd.DataFrame()
 
 
 if __name__ == "__main__":
@@ -656,5 +660,5 @@ if __name__ == "__main__":
     #     print(False)
 
     fetch_data_via_databricks_connector(
-        catalog='foodwagon_ecommerce', schema='data_engineering', table='orders', version=0, preview=True
+        catalog='marvel', schema='data_engineering', table='marvel_data', version=0
     )
