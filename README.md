@@ -39,7 +39,8 @@ This repository contains an API for performing Databricks operations via API. It
 
 6. **Store Credentials:**
    
-   - Create a `.env` file in your local GitHub directory and store the credentials as specified in `.env.example`.
+   - Rename the `.env.example` file to `.env` in your local GitHub directory. This file contains the schema for the necessary environment variables.
+   - Fetch the credentials from the designated Slack channel and add them to the `.env` file. Ensure that you correctly fill in all required fields.
 
 7. **Run the server:**
     ```bash

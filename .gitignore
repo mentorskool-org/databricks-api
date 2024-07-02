@@ -7,5 +7,5 @@ s3_methods.py
 templates.zip
 Exceptions.txt
 exceptions.txt
-Set_Tags_and_Comments_Template.py
-Upload_Data_Template.py
+pages/Set_Tags_and_Comments_Template.py
+pages/Upload_Data_Template.py
